@@ -1,15 +1,16 @@
 package delivery
 
 import (
-	"net/http"
-
+	"github.com/gin-gonic/gin"
 	"github.com/vctrl/authService/usecase"
 )
 
-func RegisterHTTPEndpoints(uc *usecase.OAuthUseCase) {
+func RegisterHTTPEndpoints(router *gin.Engine, uc *usecase.OAuthUseCase) {
 	h := NewHandler(uc)
 
-	// http.HandleFunc("/", handleHome)
-	http.HandleFunc("/login", h.Login)
-	http.HandleFunc("/callback", h.Callback)
+	authEndpoints := router.Group("/")
+	{
+		authEndpoints.GET("/login", h.Login)
+		authEndpoints.GET("/callback", h.Callback)
+	}
 }

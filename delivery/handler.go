@@ -2,10 +2,9 @@ package delivery
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/vctrl/authService/usecase"
 )
 
@@ -21,53 +20,49 @@ func NewHandler(usecase *usecase.OAuthUseCase) *Handler {
 	return &Handler{usecase: usecase}
 }
 
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	site := r.FormValue("site")
+func (h *Handler) Login(c *gin.Context) {
+	site := c.Request.FormValue("site")
 	if site == "" {
-		// todo
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	url, state, err := h.usecase.Login(site)
 	if err != nil {
-		// todo
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println(url, state)
-	expiration := time.Now().Add(365 * 24 * time.Hour)
-
-	cookie := http.Cookie{Name: oauthStateHeader, Value: state, Expires: expiration}
-	http.SetCookie(w, &cookie)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	c.SetCookie(oauthStateHeader, state, 60*60*24, "/", "localhost", false, true)
+	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
-func (h *Handler) Callback(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Callback(c *gin.Context) {
 	// Ensure that there is no request forgery going on, and that the user
 	// sending us this connect request is the user that was supposed to.
-	state, err := r.Cookie(oauthStateHeader)
+	state, err := c.Cookie(oauthStateHeader)
 
 	if err != nil {
-		// todo write error
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	if r.FormValue("state") != state.Value {
-		// todo write error
+	if c.Request.FormValue("state") != state {
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	res, err := h.usecase.Callback(r.FormValue("site"), r.FormValue("code"))
+	res, err := h.usecase.Callback(c.Request.FormValue("site"), c.Request.FormValue("code"))
 	if err != nil {
-		// todo write error
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
 	result, err := json.Marshal(res)
 	if err != nil {
-		// todo write error
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	w.Write(result)
+	c.Writer.Write(result)
 }
