@@ -20,6 +20,7 @@ func NewHandler(usecase usecase.UseCase) *Handler {
 	return &Handler{usecase: usecase}
 }
 
+// Get redirection URL to the authorization service
 func (h *Handler) Login(c *gin.Context) {
 	site := c.Request.FormValue("site")
 	if site == "" {
@@ -37,6 +38,7 @@ func (h *Handler) Login(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
+// Callback URL to which the authorization service redirects.
 func (h *Handler) Callback(c *gin.Context) {
 	// Ensure that there is no request forgery going on, and that the user
 	// sending us this connect request is the user that was supposed to.
