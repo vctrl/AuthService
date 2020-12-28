@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -60,14 +61,20 @@ func (a *App) Run(port string) error {
 	}()
 
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, os.Interrupt)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	<-quit
 
 	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdown()
 
-	return a.httpServer.Shutdown(ctx)
+	err := a.httpServer.Shutdown(ctx)
+	if err != nil {
+		a.httpServer.Close()
+		return err
+	}
+
+	return nil
 }
 
 func parseSiteConfigs() (map[string]usecase.UseCaseConfig, error) {
