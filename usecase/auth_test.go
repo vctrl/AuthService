@@ -35,7 +35,7 @@ func TestLoginHappyCase(t *testing.T) {
 
 func TestLoginUnknownSiteReturnError(t *testing.T) {
 	configMock := new(OAuth2ConfigMock)
-	// mock.Anything because random state is passed
+	// mock.Anything because state is random
 	configMock.On("AuthCodeURL", mock.Anything, mock.Anything).Return(testURL)
 
 	uc := NewAuthUseCaseConfig(testSite, configMock)
@@ -83,4 +83,8 @@ func TestCallbackExchangeTokenReturnError(t *testing.T) {
 	uc := NewAuthUseCaseConfig(testSite, configMock)
 	_, err := uc.Callback(unknownSite, testCode)
 	assert.Equal(t, err, expectedErr)
+}
+
+func TestMappingSiteConfigToOauth2Config(t *testing.T) {
+	//todo
 }
