@@ -79,7 +79,7 @@ func (auth *OAuthUseCase) getSiteConfig(site string) (*oauth2.Config, error) {
 	c, ok := auth.Configs[site]
 
 	if !ok {
-		return nil, ErrUnknownSite
+		return nil, NewUnknownSiteError()
 	}
 
 	return c, nil

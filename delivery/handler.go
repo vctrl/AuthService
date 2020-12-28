@@ -23,13 +23,13 @@ func NewHandler(usecase *usecase.OAuthUseCase) *Handler {
 func (h *Handler) Login(c *gin.Context) {
 	site := c.Request.FormValue("site")
 	if site == "" {
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.Error(NewNoSiteError())
 		return
 	}
 
 	url, state, err := h.usecase.Login(site)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 
@@ -43,24 +43,24 @@ func (h *Handler) Callback(c *gin.Context) {
 	state, err := c.Cookie(oauthStateHeader)
 
 	if err != nil {
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.Error(err)
 		return
 	}
 
 	if c.Request.FormValue("state") != state {
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.Error(NewInvalidStateError())
 		return
 	}
 
 	res, err := h.usecase.Callback(c.Request.FormValue("site"), c.Request.FormValue("code"))
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 
 	result, err := json.Marshal(res)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 

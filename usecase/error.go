@@ -1,7 +1,14 @@
 package usecase
 
-import "errors"
+import (
+	"net/http"
 
-var (
-	ErrUnknownSite = errors.New("unknown site")
+	"github.com/vctrl/authService/middleware"
 )
+
+func NewUnknownSiteError() *middleware.AppError {
+	return &middleware.AppError{
+		Code:    http.StatusBadRequest,
+		Message: "Unknown site",
+	}
+}

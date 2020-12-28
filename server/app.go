@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vctrl/authService/delivery"
+	"github.com/vctrl/authService/middleware"
 	"github.com/vctrl/authService/usecase"
 )
 
@@ -30,6 +31,7 @@ func (a *App) Run(port string) error {
 	router.Use(
 		gin.Recovery(),
 		gin.Logger(),
+		middleware.JSONAppErrorReporter(),
 	)
 
 	// register auth endpoint
