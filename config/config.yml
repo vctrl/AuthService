@@ -1,9 +1,9 @@
 --- 
-google:
-  ClientIDEnvVar: GOOGLE_CLIENT_ID
-  ClientSecretEnvVar: GOOGLE_CLIENT_SECRET
-  # Endpoint: google.Endpoint
-  RedirectURL: "http://localhost:8080/callback?site=google"
-  Scopes:
-    - "https://www.googleapis.com/auth/userinfo.email"
+sites:
+  google:
+    ClientIDEnvVar: GOOGLE_CLIENT_ID
+    ClientSecretEnvVar: GOOGLE_CLIENT_SECRET
+    RedirectURL: "http://localhost:8080/callback?site=google"
+    Scopes:
+      - "https://www.googleapis.com/auth/userinfo.email"
 port: 8080
