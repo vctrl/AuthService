@@ -13,10 +13,10 @@ var (
 )
 
 type Handler struct {
-	usecase *usecase.OAuthUseCase
+	usecase usecase.UseCase
 }
 
-func NewHandler(usecase *usecase.OAuthUseCase) *Handler {
+func NewHandler(usecase usecase.UseCase) *Handler {
 	return &Handler{usecase: usecase}
 }
 
@@ -43,7 +43,7 @@ func (h *Handler) Callback(c *gin.Context) {
 	state, err := c.Cookie(oauthStateHeader)
 
 	if err != nil {
-		c.Error(err)
+		c.Error(NewErrNoCookie(err))
 		return
 	}
 

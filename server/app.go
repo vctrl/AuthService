@@ -16,7 +16,7 @@ import (
 
 type App struct {
 	httpServer *http.Server
-	authUC     *usecase.OAuthUseCase
+	authUC     usecase.UseCase
 }
 
 func NewApp() *App {

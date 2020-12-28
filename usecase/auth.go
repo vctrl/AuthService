@@ -19,6 +19,11 @@ var (
 	endpoints = map[string]oauth2.Endpoint{"google": google.Endpoint}
 )
 
+type UseCase interface {
+	Login(site string) (string, string, error)
+	Callback(site, authCode string) (*Response, error)
+}
+
 type Response struct {
 	UserInfo     *UserInfo
 	AccessToken  string

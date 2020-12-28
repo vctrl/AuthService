@@ -5,7 +5,7 @@ import (
 	"github.com/vctrl/authService/usecase"
 )
 
-func RegisterHTTPEndpoints(router *gin.Engine, uc *usecase.OAuthUseCase) {
+func RegisterHTTPEndpoints(router *gin.Engine, uc usecase.UseCase) {
 	h := NewHandler(uc)
 
 	authEndpoints := router.Group("/")
