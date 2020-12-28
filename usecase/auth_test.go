@@ -79,10 +79,10 @@ func TestCallbackUnknownSiteReturnError(t *testing.T) {
 func TestCallbackExchangeTokenReturnError(t *testing.T) {
 	configMock := new(OAuth2ConfigMock)
 	expectedErr := errors.New("failed")
-	configMock.On("Exchange", oauth2.NoContext, testCode, mock.Anything).Return(nil, expectedErr)
+	configMock.On("Exchange", oauth2.NoContext, testCode, mock.Anything).Return(new(oauth2.Token), expectedErr)
 	uc := NewAuthUseCaseConfig(testSite, configMock)
-	_, err := uc.Callback(unknownSite, testCode)
-	assert.Equal(t, err, expectedErr)
+	_, err := uc.Callback(testSite, testCode)
+	assert.Equal(t, expectedErr, err)
 }
 
 func TestMappingSiteConfigToOauth2Config(t *testing.T) {
