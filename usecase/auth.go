@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"math/big"
-	"os"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -33,10 +32,10 @@ type Response struct {
 }
 
 type UserInfo struct {
-	Id            string `json: id`
-	Email         string `json: email`
-	VerifiedEmail bool   `json: verified_email`
-	Picture       string `json: picture`
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Picture       string `json:"picture"`
 }
 
 type SiteConfigs map[string]SiteConfig
@@ -48,10 +47,15 @@ type SiteConfig struct {
 	Scopes             []string
 }
 
-func (s *SiteConfig) MapToOauth2Config(site string) *oauth2.Config {
+type Config struct {
+	Sites SiteConfigs
+	Port  int
+}
+
+func (s *SiteConfig) MapToOauth2Config(site string, getenv func(string) string) *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     os.Getenv(s.ClientIDEnvVar),
-		ClientSecret: os.Getenv(s.ClientSecretEnvVar),
+		ClientID:     getenv(s.ClientIDEnvVar),
+		ClientSecret: getenv(s.ClientSecretEnvVar),
 		Endpoint:     endpoints[site],
 		RedirectURL:  s.RedirectURL,
 		Scopes:       s.Scopes,

@@ -86,5 +86,19 @@ func TestCallbackExchangeTokenReturnError(t *testing.T) {
 }
 
 func TestMappingSiteConfigToOauth2Config(t *testing.T) {
-	//todo
+	siteConfig := &SiteConfig{
+		ClientIDEnvVar:     "testClientID",
+		ClientSecretEnvVar: "testClientSecret",
+		RedirectURL:        "testRedirectURL",
+		Scopes:             []string{"test"},
+	}
+
+	mapped := siteConfig.MapToOauth2Config("testSite", func(key string) string {
+		return key
+	})
+
+	assert.Equal(t, siteConfig.ClientIDEnvVar, mapped.ClientID)
+	assert.Equal(t, siteConfig.ClientSecretEnvVar, mapped.ClientSecret)
+	assert.Equal(t, siteConfig.RedirectURL, mapped.RedirectURL)
+	assert.Equal(t, siteConfig.Scopes, mapped.Scopes)
 }
