@@ -21,12 +21,15 @@ type App struct {
 	authUC     usecase.UseCase
 }
 
-func NewApp() *App {
-	configs := parseConfigs()
+func NewApp() (*App, error) {
+	configs, err := parseSiteConfigs()
+	if err != nil {
+		return nil, err
+	}
 
 	return &App{
 		authUC: usecase.NewAuthUseCase(configs),
-	}
+	}, nil
 }
 
 func (a *App) Run(port string) error {
@@ -67,18 +70,22 @@ func (a *App) Run(port string) error {
 	return a.httpServer.Shutdown(ctx)
 }
 
-func parseConfigs() map[string]usecase.UseCaseConfig {
-	var siteConfigs usecase.SiteConfigs
-	err := viper.Unmarshal(&siteConfigs)
+func parseSiteConfigs() (map[string]usecase.UseCaseConfig, error) {
+	var config usecase.Config
+	err := viper.Unmarshal(&config)
+	fmt.Println(config)
+	if err != nil {
+		return nil, err
+	}
 
 	configs := make(map[string]usecase.UseCaseConfig)
-	for s, c := range siteConfigs {
-		configs[s] = c.MapToOauth2Config(s)
+	for s, c := range config.Sites {
+		configs[s] = c.MapToOauth2Config(s, os.Getenv)
 	}
 
 	if err != nil {
 		fmt.Println("Error reading configs: ", err)
 	}
 
-	return configs
+	return configs, nil
 }

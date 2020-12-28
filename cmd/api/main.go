@@ -13,7 +13,11 @@ func main() {
 		log.Fatalf("%s", err.Error())
 	}
 
-	app := server.NewApp()
+	app, err := server.NewApp()
+	if err != nil {
+		log.Fatalf("%s", err.Error())
+	}
+
 	if err := app.Run(viper.GetString("port")); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
