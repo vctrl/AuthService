@@ -1,15 +1,86 @@
 package usecase
 
-import "testing"
+import (
+	"errors"
+	"testing"
+	"time"
 
-func TestLoginUsecase(t *testing.T) {
-	// unknown site case
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/vctrl/authService/middleware"
+	"golang.org/x/oauth2"
+)
 
-	// happy case
+const (
+	testSite    = "testSite"
+	unknownSite = "unknownSite"
+	testURL     = "testURL"
+	testCode    = "testCode"
+
+	testAccessToken  = "testAccessToken"
+	testTokenType    = "testTokenType"
+	testRefreshToken = "testRefreshToken"
+)
+
+func TestLoginHappyCase(t *testing.T) {
+	configMock := new(OAuth2ConfigMock)
+	configMock.On("AuthCodeURL", mock.Anything, mock.Anything).Return(testURL)
+
+	uc := NewAuthUseCaseConfig(testSite, configMock)
+	url, _, err := uc.Login(testSite)
+
+	assert.Equal(t, url, testURL)
+	assert.Equal(t, err, nil)
+}
+
+func TestLoginUnknownSiteReturnError(t *testing.T) {
+	configMock := new(OAuth2ConfigMock)
+	// mock.Anything because random state is passed
+	configMock.On("AuthCodeURL", mock.Anything, mock.Anything).Return(testURL)
+
+	uc := NewAuthUseCaseConfig(testSite, configMock)
+	_, _, err := uc.Login(unknownSite)
+
+	assert.Equal(t, err, &middleware.AppError{Code: 400, Message: "Unknown site"})
 }
 
 func TestCallbackUsecase(t *testing.T) {
-	// unknown site case
+	configMock := new(OAuth2ConfigMock)
+	testToken := &oauth2.Token{
+		AccessToken:  testAccessToken,
+		TokenType:    testTokenType,
+		RefreshToken: testRefreshToken,
+		Expiry:       time.Time{},
+	}
 
-	// happy case
+	expected := &Response{
+		AccessToken:  testAccessToken,
+		TokenType:    testTokenType,
+		RefreshToken: testRefreshToken,
+		Expiry:       time.Time{},
+	}
+
+	configMock.On("Exchange", oauth2.NoContext, testCode, mock.Anything).Return(testToken, nil)
+
+	uc := NewAuthUseCaseConfig(testSite, configMock)
+	r, err := uc.Callback(testSite, testCode)
+	assert.Equal(t, r, expected)
+	assert.Equal(t, err, nil)
+}
+
+func TestCallbackUnknownSiteReturnError(t *testing.T) {
+	configMock := new(OAuth2ConfigMock)
+	uc := NewAuthUseCaseConfig(testSite, configMock)
+	_, err := uc.Callback(unknownSite, testCode)
+
+	assert.Equal(t, err, &middleware.AppError{Code: 400, Message: "Unknown site"})
+}
+
+func TestCallbackExchangeTokenReturnError(t *testing.T) {
+	configMock := new(OAuth2ConfigMock)
+	expectedErr := errors.New("failed")
+	configMock.On("Exchange", oauth2.NoContext, testCode, mock.Anything).Return(nil, expectedErr)
+	uc := NewAuthUseCaseConfig(testSite, configMock)
+	_, err := uc.Callback(unknownSite, testCode)
+	assert.Equal(t, err, expectedErr)
 }
