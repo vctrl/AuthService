@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"github.com/vctrl/authService/delivery"
 	"github.com/vctrl/authService/middleware"
 	"github.com/vctrl/authService/usecase"
@@ -20,8 +22,10 @@ type App struct {
 }
 
 func NewApp() *App {
+	configs := parseConfigs()
+
 	return &App{
-		authUC: usecase.NewAuthUseCase(),
+		authUC: usecase.NewAuthUseCase(configs),
 	}
 }
 
@@ -61,4 +65,20 @@ func (a *App) Run(port string) error {
 	defer shutdown()
 
 	return a.httpServer.Shutdown(ctx)
+}
+
+func parseConfigs() map[string]usecase.UseCaseConfig {
+	var siteConfigs usecase.SiteConfigs
+	err := viper.Unmarshal(&siteConfigs)
+
+	configs := make(map[string]usecase.UseCaseConfig)
+	for s, c := range siteConfigs {
+		configs[s] = c.MapToOauth2Config(s)
+	}
+
+	if err != nil {
+		fmt.Println("Error reading configs: ", err)
+	}
+
+	return configs
 }

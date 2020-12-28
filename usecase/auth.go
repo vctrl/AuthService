@@ -1,16 +1,12 @@
 package usecase
 
 import (
+	"context"
 	"crypto/rand"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"math/big"
-	"net/http"
 	"os"
 	"time"
 
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -24,8 +20,12 @@ type UseCase interface {
 	Callback(site, authCode string) (*Response, error)
 }
 
+type UseCaseConfig interface {
+	AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string
+	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
+}
+
 type Response struct {
-	UserInfo     *UserInfo
 	AccessToken  string
 	TokenType    string
 	RefreshToken string
@@ -48,7 +48,7 @@ type SiteConfig struct {
 	Scopes             []string
 }
 
-func (s *SiteConfig) mapToOauth2Config(site string) *oauth2.Config {
+func (s *SiteConfig) MapToOauth2Config(site string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     os.Getenv(s.ClientIDEnvVar),
 		ClientSecret: os.Getenv(s.ClientSecretEnvVar),
@@ -58,36 +58,20 @@ func (s *SiteConfig) mapToOauth2Config(site string) *oauth2.Config {
 	}
 }
 
-func NewAuthUseCase() *OAuthUseCase {
-	var siteConfigs SiteConfigs
-
-	err := viper.Unmarshal(&siteConfigs)
-	configs := make(map[string]*oauth2.Config)
-	for s, c := range siteConfigs {
-		configs[s] = c.mapToOauth2Config(s)
-	}
-
-	if err != nil {
-		fmt.Println("Error reading configs: ", err)
-	}
-
+func NewAuthUseCase(configs map[string]UseCaseConfig) *OAuthUseCase {
 	return &OAuthUseCase{
 		Configs: configs,
 	}
 }
 
-type OAuthUseCase struct {
-	Configs map[string]*oauth2.Config
+func NewAuthUseCaseConfig(site string, config UseCaseConfig) *OAuthUseCase {
+	return &OAuthUseCase{
+		Configs: map[string]UseCaseConfig{site: config},
+	}
 }
 
-func (auth *OAuthUseCase) getSiteConfig(site string) (*oauth2.Config, error) {
-	c, ok := auth.Configs[site]
-
-	if !ok {
-		return nil, NewUnknownSiteError()
-	}
-
-	return c, nil
+type OAuthUseCase struct {
+	Configs map[string]UseCaseConfig
 }
 
 func (auth *OAuthUseCase) Login(site string) (string, string, error) {
@@ -117,30 +101,19 @@ func (auth *OAuthUseCase) Callback(site, authCode string) (*Response, error) {
 		return nil, err
 	}
 
-	// todo move to config
-	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-	content, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	ui := &UserInfo{}
-	err = json.Unmarshal(content, ui)
-	if err != nil {
-		return nil, err
-	}
-
-	// todo return just user info
 	return &Response{
-		UserInfo:     ui,
 		AccessToken:  token.AccessToken,
 		TokenType:    token.TokenType,
 		RefreshToken: token.RefreshToken,
 		Expiry:       token.Expiry}, nil
+}
+
+func (auth *OAuthUseCase) getSiteConfig(site string) (UseCaseConfig, error) {
+	c, ok := auth.Configs[site]
+
+	if !ok {
+		return nil, NewUnknownSiteError()
+	}
+
+	return c, nil
 }
