@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -23,6 +24,8 @@ const (
 )
 
 func TestLoginHappyCase(t *testing.T) {
+	fmt.Println("test")
+
 	configMock := new(OAuth2ConfigMock)
 	configMock.On("AuthCodeURL", mock.Anything, mock.Anything).Return(testURL)
 
