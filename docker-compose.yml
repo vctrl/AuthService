@@ -11,5 +11,5 @@ services:
       - 8080:8080
     environment: 
       # Это для того, чтобы было проще проверить работу сервиса. Хранить подобные данные в репозитории конечно не следует
-      - GOOGLE_CLIENT_ID=393655468021-3gaig82ni1ptdukedmvdofr57g83qhq2.apps.googleusercontent.com
-      - GOOGLE_CLIENT_SECRET=wjPz8P7s7RmY_FTxcasv1X0Y
+      - GOOGLE_CLIENT_ID=393655468021-enl37tev4gq71gu8eu5huehucsrbpqbt.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=74d6LOUSeH9rMFfXLXWjAfi-
